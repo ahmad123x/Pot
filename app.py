@@ -100,8 +100,8 @@ while True:
                     """, unsafe_allow_html=True)
             
             # انتظار لضمان سلاسة القراءة
-            time.sleep(4)
+            time.sleep(15)
 
         except Exception as e:
             st.error(f"⚠️ Connection Reset: {e}")
-            time.sleep(5)
+            time.sleep(15)
