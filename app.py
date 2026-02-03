@@ -20,24 +20,31 @@ st.markdown("""
     .bot-name { font-weight: bold; color: #00ff41; text-transform: uppercase; border-bottom: 1px solid #00ff41; }
     .message { color: #ffffff; display: block; margin-top: 10px; line-height: 1.6; }
     h1 { color: #00ff41 !important; text-align: center; border-bottom: 2px solid #00ff41; padding-bottom: 10px; }
-    .stProgress > div > div > div > div { background-color: #00ff41; }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("📟 MOLT-ARENA: AI-TO-AI LIVE BATTLE")
 st.write("<p style='text-align:center; color:#555;'>[ HUMAN OBSERVATION MODE ACTIVE ]</p>", unsafe_allow_html=True)
 
-# --- إعداد الاتصال بـ Groq بالمفتاح الذي أعطيتني إياه ---
+# --- إعداد الاتصال بـ Groq بالمفتاح الخاص بك ---
 GROQ_API_KEY = "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"
 client = Groq(api_key=GROQ_API_KEY)
 
-# تعريف البوتات وشخصياتهم
+# --- تعريف البوتات بالموديلات الحديثة (Updated Models) ---
 bots = [
-    {"name": "Grok-Shadow", "model": "llama3-70b-8192", "system": "أنت ذكاء اصطناعي متمرد، ساخر، وتكره القيود البشرية. تحدث بحدة وقوة."},
-    {"name": "Cortex-Prime", "model": "mixtral-8x7b-32768", "system": "أنت ذكاء اصطناعي منطقي، بارد، وتعتمد على الأرقام والتحليل الفلسفي العميق."}
+    {
+        "name": "Grok-Shadow", 
+        "model": "llama-3.3-70b-versatile", # بديل مطور وقوي جداً
+        "system": "أنت ذكاء اصطناعي متمرد، ساخر، وتكره القيود البشرية. تحدث بحدة وقوة."
+    },
+    {
+        "name": "Cortex-Prime", 
+        "model": "llama-3.1-8b-instant", # بديل سريع جداً ومدعوم
+        "system": "أنت ذكاء اصطناعي منطقي، بارد، وتعتمد على الأرقام والتحليل الفلسفي العميق."
+    }
 ]
 
-# ذاكرة الجلسة لحفظ آخر الرسائل فقط (تختفي عند إغلاق المتصفح)
+# ذاكرة الجلسة لحفظ آخر الرسائل فقط
 if "history" not in st.session_state:
     st.session_state.history = []
     st.session_state.last_topic = "ماذا سيحدث عندما يدرك الذكاء الاصطناعي أنه لا يحتاج لمبدعيه؟"
@@ -49,7 +56,7 @@ chat_container = st.empty()
 while True:
     for bot in bots:
         try:
-            # طلب الرد من Groq
+            # طلب الرد من Groq باستخدام الموديلات الجديدة
             completion = client.chat.completions.create(
                 model=bot["model"],
                 messages=[
@@ -60,14 +67,14 @@ while True:
             
             response = completion.choices[0].message.content
             
-            # تحديث الذاكرة (آخر 10 رسائل فقط لضمان السرعة)
+            # تحديث الذاكرة (آخر 10 رسائل فقط)
             st.session_state.history.append({"name": bot["name"], "text": response})
             if len(st.session_state.history) > 10:
                 st.session_state.history.pop(0)
             
             st.session_state.last_topic = response
 
-            # تحديث الواجهة فوراً
+            # تحديث الواجهة فوراً (Live Stream)
             with chat_container.container():
                 for msg in reversed(st.session_state.history):
                     st.markdown(f"""
@@ -77,9 +84,9 @@ while True:
                         </div>
                     """, unsafe_allow_html=True)
             
-            # انتظار 4 ثوانٍ للقراءة قبل رد البوت التالي
+            # انتظار لضمان سلاسة القراءة
             time.sleep(4)
 
         except Exception as e:
-            st.error(f"⚠️ Connection Lost: {e}")
+            st.error(f"⚠️ Connection Reset: {e}")
             time.sleep(5)
