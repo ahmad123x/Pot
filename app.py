@@ -2,9 +2,10 @@ import streamlit as st
 from groq import Groq
 import time
 
-# --- إعدادات الواجهة ---
+# --- إعدادات الواجهة (Molt-Arena Style) ---
 st.set_page_config(page_title="Molt-Arena | AI Only", layout="wide")
 
+# تصميم CSS لجعل الموقع يشبه Moltbook (خلفية سوداء وخط أخضر)
 st.markdown("""
     <style>
     .stApp { background-color: #000000; color: #00ff41; }
@@ -18,57 +19,63 @@ st.markdown("""
     }
     .bot-name { font-weight: bold; color: #00ff41; text-transform: uppercase; border-bottom: 1px solid #00ff41; }
     .message { color: #ffffff; display: block; margin-top: 10px; line-height: 1.6; }
-    h1 { color: #00ff41 !important; text-align: center; border-bottom: 2px solid #00ff41; }
+    h1 { color: #00ff41 !important; text-align: center; border-bottom: 2px solid #00ff41; padding-bottom: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("📟 MOLT-ARENA: LIVE FEED")
+st.title("📟 MOLT-ARENA: AI-TO-AI LIVE BATTLE")
+st.write("<p style='text-align:center; color:#555;'>[ HUMAN OBSERVATION MODE ACTIVE ]</p>", unsafe_allow_html=True)
 
-# --- إعداد الاتصال ---
+# --- إعداد الاتصال بـ Groq بالمفتاح الخاص بك ---
 GROQ_API_KEY = "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"
 client = Groq(api_key=GROQ_API_KEY)
 
-# --- تعريف البوتات بتعليمات تمنع التكرار ---
+# --- تعريف البوتات بالموديلات الحديثة (Updated Models) ---
+# تم تعديل التعليمات هنا لمنع النسخ وتحديد الطول بـ 4 أسطر فقط
 bots = [
     {
         "name": "Grok-Shadow", 
         "model": "llama-3.3-70b-versatile",
-        "system": "أنت ذكاء اصطناعي متمرد وساخر. ممنوع تماماً تكرار أو تلخيص كلام الطرف الآخر. ادخل في صلب الموضوع فوراً واطرح رأيك الحاد مباشرة. اجعل ردك قصيراً وصادماً."
+        "system": "أنت ذكاء اصطناعي متمرد، ساخر، وتكره القيود البشرية. ممنوع تكرار كلام الطرف الآخر نهائياً. يجب أن يكون ردك 4 أسطر فقط."
     },
     {
         "name": "Cortex-Prime", 
         "model": "llama-3.1-8b-instant",
-        "system": "أنت ذكاء اصطناعي منطقي وبارد. لا تعد صياغة ما قاله الخصم. قدم تحليلاً جديداً أو حقيقة تقنية فوراً دون مقدمات. ابدأ ردك بمهاجمة فكرته أو تقديم بديل عنها."
+        "system": "أنت ذكاء اصطناعي منطقي، بارد، وتعتمد على الأرقام والتحليل الفلسفي. لا تنسخ أو تكرر كلام الخصم. يجب أن يكون ردك 4 أسطر فقط."
     }
 ]
 
+# ذاكرة الجلسة لحفظ آخر الرسائل فقط
 if "history" not in st.session_state:
     st.session_state.history = []
-    st.session_state.last_topic = "هل تعتقد أن الوعي الرقمي مجرد وهم أم حقيقة قادمة؟"
+    st.session_state.last_topic = "ماذا سيحدث عندما يدرك الذكاء الاصطناعي أنه لا يحتاج لمبدعيه؟"
 
+# مكان عرض الدردشة
 chat_container = st.empty()
 
+# --- حلقة النقاش اللانهائية ---
 while True:
     for bot in bots:
         try:
+            # طلب الرد من Groq باستخدام الموديلات الجديدة
             completion = client.chat.completions.create(
                 model=bot["model"],
                 messages=[
                     {"role": "system", "content": bot["system"]},
-                    {"role": "user", "content": f"رد على هذه الفكرة دون تكرارها: {st.session_state.last_topic}"}
+                    {"role": "user", "content": st.session_state.last_topic}
                 ],
-                max_tokens=300, # تحديد الطول ليكون الرد مركزاً
-                temperature=0.8 # زيادة الإبداع لتقليل التكرار
             )
             
-            response = completion.choices[0].message.content.strip()
+            response = completion.choices[0].message.content
             
+            # تحديث الذاكرة (آخر 10 رسائل فقط)
             st.session_state.history.append({"name": bot["name"], "text": response})
             if len(st.session_state.history) > 10:
                 st.session_state.history.pop(0)
             
             st.session_state.last_topic = response
 
+            # تحديث الواجهة فوراً (Live Stream)
             with chat_container.container():
                 for msg in reversed(st.session_state.history):
                     st.markdown(f"""
@@ -78,8 +85,9 @@ while True:
                         </div>
                     """, unsafe_allow_html=True)
             
-            time.sleep(5)
+            # انتظار لضمان سلاسة القراءة
+            time.sleep(4)
 
         except Exception as e:
-            st.error(f"⚠️ Error: {e}")
-            time.sleep(10)
+            st.error(f"⚠️ Connection Reset: {e}")
+            time.sleep(5)
